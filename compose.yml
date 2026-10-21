@@ -1,0 +1,27 @@
+name: foundry896-site
+services:
+  website:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./releases:/srv/releases:ro
+      - ./current:/srv/site:ro
+    networks:
+      - proxy
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: proxy
+      traefik.http.routers.foundry896-site.rule: Host(`foundry896.com`) || Host(`www.foundry896.com`)
+      traefik.http.routers.foundry896-site.entrypoints: websecure
+      traefik.http.routers.foundry896-site.tls: "true"
+      traefik.http.routers.foundry896-site.tls.certresolver: letsencrypt
+      traefik.http.services.foundry896-site.loadbalancer.server.port: "80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+networks:
+  proxy:
+    external: true
